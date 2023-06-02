@@ -1,0 +1,9 @@
+env/
+*.pyc
+*.pkl
+*.pickle
+*.csv
+*.pkl
+*.db
+venv_3.7/
+data_procesing_filter/data_autores/*
