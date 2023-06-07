@@ -526,7 +526,7 @@ class deepscreen_db_train(deepscreen_db):
             'n_epoch': hyperparameters_dict['n_epoch'],
             'epoch_vs_loss': epoch_vs_loss.to_json()
         }
-        logger.debug(f'Trained model results to be stored in db: {test_values_dict}, Hyperparameters to be stored in db: {hyperparameters_dict}')
+        logger.debug(f'Trained model of {target_id} to be stored in db: {test_values_dict}, Hyperparameters to be stored in db: {hyperparameters_dict}')
         try:
             pd.DataFrame(data, index=[0]).to_sql('trained_models', self.engine, if_exists='append', index=False)
             return True
