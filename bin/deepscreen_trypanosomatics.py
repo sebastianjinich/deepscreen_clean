@@ -430,6 +430,7 @@ class deepscreen_db:
                         batch_size INT(255),
                         drop_rate FLOAT(255,10),
                         n_epoch INT(255),
+                        trained_with TEXT,
                         epoch_vs_loss TEXT
                     );
                 '''
@@ -479,7 +480,7 @@ class deepscreen_db_train(deepscreen_db):
             logger.error(f'Error while querying trained models from db\n{exp}')
             return True
 
-    def add_trained_model(self, target_id, trained_model, trained_model_matrix_path, test_values_dict: dict, hyperparameters_dict: dict, epoch_vs_loss: pd.DataFrame):
+    def add_trained_model(self, target_id, trained_model, trained_model_matrix_path, test_values_dict: dict, hyperparameters_dict: dict, training_compounds: pd.Series, epoch_vs_loss: pd.DataFrame):
         """
         Adds a trained model to the 'trained_models' table in the database.
 
@@ -520,13 +521,17 @@ class deepscreen_db_train(deepscreen_db):
             'true_positive': int(test_values_dict['TP']),
             'false_positive': int(test_values_dict['FP']),
             'true_negative': int(test_values_dict['TN']),
+            'false_negative': int(test_values_dict['FN']),
             'learning_rate': hyperparameters_dict['learning_rate'],
+            'fully_layer_1': hyperparameters_dict['fully_layer_1'],
+            'fully_layer_2': hyperparameters_dict['fully_layer_2'],
             'batch_size': hyperparameters_dict['batch_size'],
             'drop_rate': hyperparameters_dict['drop_rate'],
             'n_epoch': hyperparameters_dict['n_epoch'],
+            'trained_with': training_compounds.to_json(orient='records'),
             'epoch_vs_loss': epoch_vs_loss.to_json()
         }
-        logger.debug(f'Trained model of {target_id} to be stored in db: {test_values_dict}, Hyperparameters to be stored in db: {hyperparameters_dict}')
+        logger.debug(f'Trained model of {target_id} to be stored in db')
         try:
             pd.DataFrame(data, index=[0]).to_sql('trained_models', self.engine, if_exists='append', index=False)
             return True
@@ -697,9 +702,10 @@ class trainer:
                     config_nn = self.get_config_nn()
                     df_training = df[['comp_id',target,'smiles']]
                     df_training = df_training.dropna(how='any')
+                    training_comp = df['comp_id']
                     training_matrix_path, test_values, epoch_vs_loss, model = train(df_training,target,result_path,images,experiment_name=target,train_split_mode='train_random_split',model_name='CNNModel1',**config_nn)
                     logger.debug(f'Matrix stored in {training_matrix_path}; Results values {test_values}')
-                    self.db.add_trained_model(target,model,training_matrix_path,test_values,self.get_config_nn(),epoch_vs_loss)
+                    self.db.add_trained_model(target,model,training_matrix_path,test_values,self.get_config_nn(),training_comp,epoch_vs_loss)
 
             else:    
                 logger.debug(f'training {target}')
@@ -708,9 +714,10 @@ class trainer:
                 config_nn = self.get_config_nn()
                 df_training = df[['comp_id',target,'smiles']]
                 df_training = df_training.dropna(how='any')
+                training_comp = df['comp_id']
                 training_matrix_path, test_values, epoch_vs_loss, model = train(df_training,target,result_path,images,experiment_name=target,train_split_mode='train_random_split',model_name='CNNModel1',**config_nn)
                 logger.debug(f'Matrix stored in {training_matrix_path}; Results values {test_values}')
-                self.db.add_trained_model(target,model,training_matrix_path,test_values,self.get_config_nn(),epoch_vs_loss)
+                self.db.add_trained_model(target,model,training_matrix_path,test_values,self.get_config_nn(),training_comp,epoch_vs_loss)
             
             if plot_epoch_loss:
                 try:
