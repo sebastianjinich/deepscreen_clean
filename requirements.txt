@@ -4,4 +4,5 @@ numpy==1.21.6
 torch
 scipy
 scikit-learn
+rdkit
 sqlalchemy==1.4.5
