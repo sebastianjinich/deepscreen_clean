@@ -11,3 +11,4 @@ venv_conda_3.11/
 .env/
 *tar*
 *save
+*.log
