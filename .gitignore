@@ -7,3 +7,7 @@ env/
 *.db
 venv_3.7/
 data_procesing_filter/data_autores/*
+venv_conda_3.11/
+.env/
+*tar*
+*save
